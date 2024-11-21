@@ -1,0 +1,58 @@
+name: kafka-example
+
+services:
+  zookeeper:
+    image: zookeeper:latest
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka0:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9095:9094"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_LISTENERS: INTERNAL://kafka0:9092,OUTSIDE://kafka0:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka0:9092,OUTSIDE://localhost:9095
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
+
+      KAFKA_LOG_DIR: /kafka/logs
+      KAFKA_BROKER_ID: 0
+      KAFKA_offsets.topic.replication.factor: 2
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./kafka_data/0:/kafka
+
+  kafka1:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9096:9094"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_LISTENERS: INTERNAL://kafka1:9092,OUTSIDE://kafka1:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:9092,OUTSIDE://localhost:9096
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
+
+      KAFKA_LOG_DIR: /kafka/logs
+      KAFKA_BROKER_ID: 1
+      KAFKA_offsets.topic.replication.factor: 2
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./kafka_data/1:/kafka
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8080:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+#    volumes:
+#      - ./kui_config.yml:/etc/kafkaui/dynamic_config.yaml
